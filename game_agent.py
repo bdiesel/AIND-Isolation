@@ -114,7 +114,7 @@ class CustomPlayer:
         """
 
         self.time_left = time_left
-
+        print("Game: ", game)
         # TODO: finish this function!
 
         # Perform any required initializations, including selecting an initial
@@ -163,8 +163,34 @@ class CustomPlayer:
         if self.time_left() < self.TIMER_THRESHOLD:
             raise Timeout()
 
-        # TODO: finish this function!
-        raise NotImplementedError
+        move = (-1, -1)
+        score = 0
+        legal_moves = game.get_legal_moves()
+
+        if len(legal_moves) == 0:
+            return self.score(game, self), (-1, -1)
+        if depth == 0:
+            return self.score(game, self), game.get_player_location(self)
+
+        if maximizing_player:
+            return self.get_max_value(move, game, depth, maximizing_player, legal_moves)
+        else:
+            return self.get_min_value(move, game, depth, maximizing_player, legal_moves)
+
+    def get_max_value(self, move, game, depth, maximizing_player, legal_moves):
+        scores = []
+        for move in legal_moves:
+            score = self.minimax(game.forecast_move(move), depth - 1, not maximizing_player)[0]
+            scores.append((score, move))
+        return max(scores)
+
+
+    def get_min_value(self, move, game, depth, maximizing_player, legal_moves):
+        scores = []
+        for move in legal_moves:
+            score = self.minimax(game.forecast_move(move), depth - 1, not maximizing_player)[0]
+            scores.append((score, move))
+        return min(scores)
 
     def alphabeta(self, game, depth, alpha=float("-inf"), beta=float("inf"), maximizing_player=True):
         """Implement minimax search with alpha-beta pruning as described in the
