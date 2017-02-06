@@ -173,22 +173,25 @@ class CustomPlayer:
             return self.score(game, self), game.get_player_location(self)
 
         if maximizing_player:
-            return self.get_max_value(move, game, depth, maximizing_player, legal_moves)
+            return self.get_max_value(move, game, depth,
+                                      maximizing_player, legal_moves)
         else:
-            return self.get_min_value(move, game, depth, maximizing_player, legal_moves)
+            return self.get_min_value(move, game, depth,
+                                      maximizing_player, legal_moves)
 
     def get_max_value(self, move, game, depth, maximizing_player, legal_moves):
         scores = []
         for move in legal_moves:
-            score = self.minimax(game.forecast_move(move), depth - 1, not maximizing_player)[0]
+            score = self.minimax(game.forecast_move(move), depth-1,
+                                 not maximizing_player)[0]
             scores.append((score, move))
         return max(scores)
-
 
     def get_min_value(self, move, game, depth, maximizing_player, legal_moves):
         scores = []
         for move in legal_moves:
-            score = self.minimax(game.forecast_move(move), depth - 1, not maximizing_player)[0]
+            score = self.minimax(game.forecast_move(move), depth-1,
+                                 not maximizing_player)[0]
             scores.append((score, move))
         return min(scores)
 
@@ -227,5 +230,43 @@ class CustomPlayer:
         if self.time_left() < self.TIMER_THRESHOLD:
             raise Timeout()
 
-        # TODO: finish this function!
-        raise NotImplementedError
+        if depth == 0:
+            return self.score(game, self), game.get_player_location(self)
+
+        # set the inital best bounds as the default alpha for max player
+        # and default for min player.
+        best_score = alpha if maximizing_player else beta
+
+        # Initialize a best move variable.
+        best_move = (-1, -1)
+
+        # recurse over the alphabeta function
+        for move in game.get_legal_moves():
+            # alterante between players.
+            if maximizing_player:
+                score, _ = self.alphabeta(game.forecast_move(move),
+                                          depth-1, alpha, beta,
+                                          maximizing_player=False)
+                # update the best score if a better score is found
+                if score > alpha:
+                    best_score, best_move = score, move
+                # prune branch if possible
+                if best_score >= beta:
+                    break  # exit early
+                # update alpha
+                alpha = max(alpha, best_score)
+
+            if not maximizing_player:
+                score, _ = self.alphabeta(game.forecast_move(move),
+                                          depth-1, alpha, beta,
+                                          maximizing_player=True)
+                # update the best score if a better score is found
+                if score < beta:
+                    best_score, best_move = score, move
+                # prune branch if possible
+                if best_score <= alpha:
+                    break  # exit early
+                # update alpha
+                beta = min(beta, best_score)
+
+        return best_score, best_move
