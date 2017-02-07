@@ -37,8 +37,12 @@ def custom_score(game, player):
         The heuristic value of the current game state to the specified player.
     """
 
-    # TODO: finish this function!
-    raise NotImplementedError
+    other_player = game.inactive_player if player == game.active_player else game.active_player
+
+    my_moves = len(game.get_legal_moves(player))
+    op_moves = len(game.get_legal_moves(other_player))
+
+    return float(my_moves - op_moves)
 
 
 class CustomPlayer:
@@ -119,6 +123,7 @@ class CustomPlayer:
         # Perform any required initializations, including selecting an initial
         pad_time = 10
         # move from the game board (i.e., an opening book), or returning
+
         # immediately if there are no legal moves
         if len(game.get_legal_moves()) == 0:
             return (-1, -1)
@@ -132,9 +137,10 @@ class CustomPlayer:
             while self.time_left() > pad_time:
                 if self.method == 'minimax':
                     _, move = self.minimax(game, depth)
+                elif self.method == 'alphabeta':
+                    _, move = self.alphabeta(game, depth)
                 else:
-                    if self.method == 'alphabeta':
-                        _, move = self.alphabeta(game, depth)
+                    raise Exception('No Method Error')
                 if not self.iterative:
                     return move
                 depth += 1
@@ -180,8 +186,9 @@ class CustomPlayer:
         if self.time_left() < self.TIMER_THRESHOLD:
             raise Timeout()
 
+        # placeholder move
         move = (-1, -1)
-        score = 0
+
         legal_moves = game.get_legal_moves()
 
         if len(legal_moves) == 0:
@@ -190,25 +197,28 @@ class CustomPlayer:
             return self.score(game, self), game.get_player_location(self)
 
         if maximizing_player:
-            return self.get_max_value(move, game, depth,
-                                      maximizing_player, legal_moves)
+            score, best_move = self.get_max_value(move, game, depth,
+                                                  maximizing_player,
+                                                  legal_moves)
         else:
-            return self.get_min_value(move, game, depth,
-                                      maximizing_player, legal_moves)
+            score, best_move = self.get_min_value(move, game, depth,
+                                                  maximizing_player,
+                                                  legal_moves)
+        return score, best_move
 
     def get_max_value(self, move, game, depth, maximizing_player, legal_moves):
         scores = []
         for move in legal_moves:
-            score = self.minimax(game.forecast_move(move), depth-1,
-                                 not maximizing_player)[0]
+            score, _ = self.minimax(game.forecast_move(move), depth-1,
+                                    not maximizing_player)
             scores.append((score, move))
         return max(scores)
 
     def get_min_value(self, move, game, depth, maximizing_player, legal_moves):
         scores = []
         for move in legal_moves:
-            score = self.minimax(game.forecast_move(move), depth-1,
-                                 not maximizing_player)[0]
+            score, _ = self.minimax(game.forecast_move(move), depth-1,
+                                    not maximizing_player)
             scores.append((score, move))
         return min(scores)
 
