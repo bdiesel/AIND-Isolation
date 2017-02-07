@@ -115,28 +115,36 @@ class CustomPlayer:
             Board coordinates corresponding to a legal move; may return
             (-1, -1) if there are no available legal moves.
         """
-
         self.time_left = time_left
-        print("Game: ", game)
-        # TODO: finish this function!
-
         # Perform any required initializations, including selecting an initial
+        pad_time = 10
         # move from the game board (i.e., an opening book), or returning
         # immediately if there are no legal moves
-
+        if len(game.get_legal_moves()) == 0:
+            return (-1, -1)
         try:
             # The search method call (alpha beta or minimax) should happen in
             # here in order to avoid timeout. The try/except block will
             # automatically catch the exception raised by the search method
             # when the timer gets close to expiring
-            pass
+            depth = 1 if self.iterative else self.search_depth
+
+            while self.time_left() > pad_time:
+                if self.method == 'minimax':
+                    _, move = self.minimax(game, depth)
+                else:
+                    if self.method == 'alphabeta':
+                        _, move = self.alphabeta(game, depth)
+                if not self.iterative:
+                    return move
+                depth += 1
 
         except Timeout:
             # Handle any actions required at timeout, if necessary
-            pass
+            return move
 
         # Return the best move from the last completed search iteration
-        raise NotImplementedError
+        return move
 
     def minimax(self, game, depth, maximizing_player=True):
         """Implement the minimax search algorithm as described in the lectures.
