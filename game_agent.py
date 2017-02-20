@@ -184,7 +184,6 @@ def heuristic_4_center_decay(game, player):
     op_center_distance = math.sqrt((op_pos_row - center_row) ** 2 +
                                    (op_pos_col - center_col) ** 2)
 
-    print(decay)
     return float(my_moves * my_center_distance - op_moves * op_center_distance * decay)
 
 
