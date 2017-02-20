@@ -7,7 +7,7 @@ You must test your agent's strength against a set of agents with known
 relative strength using tournament.py and include the results in your report.
 """
 import random
-
+import math
 
 class Timeout(Exception):
     """Subclass base exception for code clarity."""
@@ -36,13 +36,156 @@ def custom_score(game, player):
     float
         The heuristic value of the current game state to the specified player.
     """
+    if game.is_loser(player):
+        return float("-inf")
 
-    other_player = game.inactive_player if player == game.active_player else game.active_player
+    if game.is_winner(player):
+        return float("inf")
+
+    my_heuristic_functions = {"weighted": heuristic_1_weighted,
+                              "decay": heuristic_2_decay,
+                              "center": heuristic_3_center,
+                              "center_decay": heuristic_4_center_decay}
+
+    return my_heuristic_functions["center_decay"](game, player)
+
+
+def heuristic_1_weighted(game, player):
+    """The "Improved" evaluation function discussed in lecture that outputs a
+    score equal to the difference in the number of moves available to the
+    two players, this one is a weighted score.
+
+    Parameters
+    ----------
+    game : `isolation.Board`
+        An instance of `isolation.Board` encoding the current state of the
+        game (e.g., player locations and blocked cells).
+
+    player : hashable
+        One of the objects registered by the game object as a valid player.
+        (i.e., `player` should be either game.__player_1__ or
+        game.__player_2__).
+
+    Returns
+    ----------
+    float
+        The heuristic value of the current game state
+    """
+    op_player = game.get_opponent(player)
 
     my_moves = len(game.get_legal_moves(player))
-    op_moves = len(game.get_legal_moves(other_player))
+    op_moves = len(game.get_legal_moves(op_player))
 
-    return float(my_moves - op_moves)
+    return float(my_moves - op_moves * 2)
+
+
+def heuristic_2_decay(game, player):
+    """
+    Favor moves to the center of the board
+
+    Parameters
+    ----------
+    game : `isolation.Board`
+        An instance of `isolation.Board` encoding the current state of the
+        game (e.g., player locations and blocked cells).
+
+    player : hashable
+        One of the objects registered by the game object as a valid player.
+        (i.e., `player` should be either game.__player_1__ or
+        game.__player_2__).
+
+    Returns
+    ----------
+    float
+        The heuristic value of the current game state
+    """
+    op_player = game.get_opponent(player)
+    decay = len(game.get_blank_spaces()) / (game.width * game.height)*2
+
+    my_moves = len(game.get_legal_moves(player))
+    op_moves = len(game.get_legal_moves(op_player))
+
+    return float(my_moves - op_moves * decay)
+
+
+def heuristic_3_center(game, player):
+    """
+    Player that chooses next move inorder to dominate the center of the board.
+
+    Parameters
+    ----------
+    game : `isolation.Board`
+        An instance of `isolation.Board` encoding the current state of the
+        game (e.g., player locations and blocked cells).
+
+    player : hashable
+        One of the objects registered by the game object as a valid player.
+        (i.e., `player` should be either game.__player_1__ or
+        game.__player_2__).
+
+    Returns
+    ----------
+    float
+        The heuristic value of the current game state
+    """
+    op_player = game.get_opponent(player)
+
+    my_moves = len(game.get_legal_moves(player))
+    op_moves = len(game.get_legal_moves(op_player))
+
+    my_pos_row, my_pos_col = game.get_player_location(player)
+    op_pos_row, op_pos_col = game.get_player_location(op_player)
+
+    center_row, center_col = int(game.height / 2), int(game.width / 2)
+
+    my_center_distance = math.sqrt((my_pos_row - center_row) ** 2 +
+                                   (my_pos_col - center_col) ** 2)
+    op_center_distance = math.sqrt((op_pos_row - center_row) ** 2 +
+                                   (op_pos_col - center_col) ** 2)
+
+    return float(my_moves * my_center_distance - op_moves * op_center_distance)
+
+
+def heuristic_4_center_decay(game, player):
+    """
+    Player that chooses next move inorder to dominate the center of the board,
+    them moves to center become less weighted as the game progresses.
+
+    Parameters
+    ----------
+    game : `isolation.Board`
+        An instance of `isolation.Board` encoding the current state of the
+        game (e.g., player locations and blocked cells).
+
+    player : hashable
+        One of the objects registered by the game object as a valid player.
+        (i.e., `player` should be either game.__player_1__ or
+        game.__player_2__).
+
+    Returns
+    ----------
+    float
+        The heuristic value of the current game state
+    """
+
+    op_player = game.get_opponent(player)
+
+    my_moves = len(game.get_legal_moves(player))
+    op_moves = len(game.get_legal_moves(op_player))
+
+    my_pos_row, my_pos_col = game.get_player_location(player)
+    op_pos_row, op_pos_col = game.get_player_location(op_player)
+
+    center_row, center_col = int(game.height / 2), int(game.width / 2)
+    decay = len(game.get_blank_spaces()) / (game.width * game.height)*2
+
+    my_center_distance = math.sqrt((my_pos_row - center_row) ** 2 +
+                                   (my_pos_col - center_col) ** 2)
+    op_center_distance = math.sqrt((op_pos_row - center_row) ** 2 +
+                                   (op_pos_col - center_col) ** 2)
+
+    print(decay)
+    return float(my_moves * my_center_distance - op_moves * op_center_distance * decay)
 
 
 class CustomPlayer:
